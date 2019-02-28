@@ -1,0 +1,155 @@
+#Name: Enock Gansou
+
+main: 	    irmovl 0x1000, %esp      # init stack pointer
+       	    irmovl $8, %eax          # We will have two local variables 
+       	    subl %eax, %esp          # Subtracting 4 bytes to adjust stack
+
+	    irmovl data, %ebx        # get the adress of Data
+
+	    pushl %ebx               # pushing parameter
+       	    call readArray           # function call
+       	    popl %ebx                # removing parameter
+
+	    rmmovl %eax, 4(%esp)     # store size at bottom (local variable 1)
+
+	    irmovl 1, %ecx
+       	    subl %ecx, %eax          # 4(size -1)
+      	    irmovl 4, %ecx
+       	    multl %ecx, %eax
+
+       	    addl %eax, %ebx	     # *start_point
+       	    rmmovl %ebx, %esp        # Store start_point at top (local variable 2)
+
+	    mrmovl 4(%esp), %ecx     # array_size
+
+	    irmovl 0, %edx           # 0 parameter
+
+	    pushl %edx
+	    pushl %ecx               # pushing parameters (rightmost first)
+       	    pushl %ebx
+
+	    call revPrefSum          # function call
+
+	    popl %ebx
+       	    popl %ecx                # retrieving parameters
+       	    popl %ebx
+
+       	    irmovl data, %ebx        # get the adress of data
+
+	    pushl %ebx               # pushing parameter
+   	    call printArray          # function call
+       	    popl %ebx                # removing parameter
+
+	    halt
+       
+
+readArray:  pushl %ebp               # ON_ENTRY saving old base/frame ptr 
+            rrmovl %esp, %ebp        # ON_ENTRY set new frame ptr
+
+	    irmovl $4, %eax          # We will have one local variable
+      	    subl %eax, %esp          # Subtracting 4 bytes to adjust stack
+
+      	    mrmovl 8(%ebp), %ebx     # Retrieving parameter
+
+	    irmovl 20, %edi          # MAX_LEN
+
+      	    irmovl 0, %eax
+      	    mrmovl -4(%ebp), %eax    # int size = 0
+      
+loop:	    rdint %ecx               # read integer
+
+       	    rmmovl %ecx, 0(%ebx)     # Copy integer to data
+
+       	    irmovl 1, %eax
+       	    addl %eax, %ecx          # check whether input is -1
+       	    je Endloop
+
+	    mrmovl -4(%ebp), %edx 
+       	    addl %eax, %edx          # size++
+       	    rmmovl %edx, -4(%ebp)
+
+      	    #While testing, I realized there is no restriction on the array length
+       	    #subl %eax, %edi         # size checker
+       	    #je Endloop
+
+	    irmovl 4, %esi
+       	    addl %esi, %ebx          # Moving pointer
+
+	    jmp loop
+
+Endloop:    mrmovl -4(%ebp), %eax    # return the size
+	    rrmovl %ebp, %esp        # ON_EXIT reset stack ptr
+      	    popl %ebp                # ON_EXIT restore oldbase/frame ptr
+      	    ret                      # ON_EXIT
+	 
+
+revPrefSum:
+	    pushl %ebp               # ON_ENTRY saving old base/frame ptr 
+      	    rrmovl %esp, %ebp        # ON_ENTRY set new frame ptr
+
+	    mrmovl 8(%ebp), %ebx     # Retrieving start_point
+      	    mrmovl 12(%ebp), %ecx    # Retrieving array_size
+      	    mrmovl 16(%ebp), %edx    # Retrieving total
+
+	    irmovl $0, %esi        
+      	    subl %esi, %ecx          # Checking whether size is zero
+      	    je End                   # Base Case
+      
+recStep:    mrmovl 0(%ebx), %edi
+            addl %edx, %edi          # *a += total
+	    rmmovl %edi, 0(%ebx)
+
+	    irmovl $4, %esi
+            subl %esi, %ebx          # start_point-1
+
+	    irmovl $1, %esi
+            subl %esi, %ecx          # array_size-1
+
+	    pushl %edi               
+       	    pushl %ecx               # pushing parameters (rightmost first)
+       	    pushl %ebx
+
+       	    call revPrefSum          # recursive call
+
+       	    popl %ebx
+       	    popl %ecx                # getting rid of passed parameter
+       	    popl %edi
+
+End:	    rrmovl %ebp, %esp        # ON_EXIT reset stack ptr
+      	    popl %ebp                # ON_EXIT restore old frame 
+      	    ret                      # ON_EXIT
+
+
+printArray:
+	    pushl %ebp               # ON_ENTRY saving old base/frame ptr 
+            rrmovl %esp, %ebp        # ON_ENTRY set new frame ptr
+
+	    mrmovl 8(%ebp), %ebx     # Retrieving parameter
+
+loop2:      mrmovl 0(%ebx), %eax     # value at adress
+
+	    irmovl 1, %edi        
+	    addl %edi, %eax       
+	    je endLoop2	             # Check whether value is -1 
+
+	    subl %edi, %eax
+	    wrint %eax               # Otherwise, write value
+
+	    irmovl 32, %ecx          # space character
+	    wrch %ecx
+
+	    irmovl 4, %edi
+	    addl %edi, %ebx          # Move pointer
+
+	    jmp loop2
+
+endLoop2:   irmovl 10, %ecx          # newline character
+	    wrch %ecx
+
+	    rrmovl %ebp, %esp    # ON_EXIT reset stack ptr
+      	    popl %ebp            # ON_EXIT restore oldbase/frame ptr
+      	    ret                  # ON_EXIT
+
+	    .align 4
+data: 	    .long 0
+

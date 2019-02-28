@@ -1,0 +1,52 @@
+#Name: Enock Gansou
+
+main:	   irmovl 0x1000, %esp        # init stack pointer
+
+           rdint %ebx                 # reading value
+
+	   irmovl 0, %eax             # set register to zero
+
+	   pushl %ebx    	      # pushing parameter
+	   call Fib
+	   popl %ebx		      # remove parameter
+
+	   wrint %eax     	      #	accessing the return value
+
+	   irmovl $10, %ecx    	      # newline
+       	   wrch %ecx
+       	   halt
+       
+Fib:	   pushl %ebp                 # ON_ENTRY saving old frame ptr
+    	   rrmovl %esp, %ebp          # ON_ENTRY set new frame ptr
+
+ 	   mrmovl 8(%ebp), %edx       # Retrieving parameter
+
+	   irmovl $0, %ecx        
+ 	   subl %ecx, %edx            # Checking whether it is one
+	   je fibEnd                  # if equal 0 we are done 
+
+	   irmovl $1, %ecx        
+ 	   subl %ecx, %edx            # Checking whether it is one
+	   je baseCase                # if equal 1 we are done
+
+recStep:   pushl %edx                 # pushing n - 1 parameter
+      	   call Fib                   # recursive call
+      	   popl %edx                  # getting rid of passed parameter
+      	   mrmovl 8(%ebp), %edx       # accessing parameter n
+
+	   irmovl $2, %ecx 
+      	   subl %ecx, %edx
+      	   pushl %edx                 # pushing n - 2 parameter
+      	   call Fib                   # recursive call
+      	   popl %edx                  # getting rid of passed parameter
+
+	   jmp fibEnd
+
+baseCase:
+	   irmovl $1, %ecx
+	   addl %ecx, %eax
+
+fibEnd:	   rrmovl %ebp, %esp          # ON_EXIT reset stack ptr
+      	   popl %ebp                  # ON_EXIT restore old frame 
+    	   ret                        # ON_EXIT
+

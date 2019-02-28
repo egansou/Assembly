@@ -1,0 +1,80 @@
+#Name: Enock Gansou
+
+main:	      irmovl 0x1000, %esp               # init stack pointer
+
+	      irmovl 20, %ebx                   # MAX_CHARACTERS
+	      irmovl 1, %esi                    # i++
+
+	      irmovl 0, %ecx                    # int i = 0
+	      pushl %ecx
+
+	      irmovl 10, %eax                   # Nextline
+
+	      irmovl Array, %edi		# Pointer to Array
+
+FirstLoop:    rdch %edx                         # reads character
+
+	      rmmovl %edx, 0(%edi)              # add character to Array
+
+	      subl %eax, %edx
+     	      je Next                           # Stop if nextline
+
+      	      popl %ecx
+      	      addl %esi, %ecx                   # Incrementing i
+     	      pushl %ecx 
+
+	      subl %esi, %ebx                   # keep track of remaining spaces
+      	      je Next
+	      
+      	      irmovl 4, %ecx
+      	      addl %ecx, %edi                   # Move pointer to the next space in Array
+
+      	      jmp FirstLoop		     
+ 
+Next:	      popl %edx     	                # data_length = i
+
+	      rrmovl %edx, %ecx
+      	      subl %esi, %ecx                   # index of last element
+
+	      irmovl 2, %eax
+      	      divl %eax, %edx                   # data_length/2
+      	      je EndifY
+
+	      irmovl $4, %eax
+      	      multl %eax, %ecx                  # 4*index of lastElement
+
+	      irmovl Array, %eax
+      	      irmovl Array, %ebx                # Getting first and last adresses 
+      	      addl %ecx, %ebx
+	      
+SecondLoop:   mrmovl 0(%eax), %ecx
+	      mrmovl 0(%ebx), %edi              # Get values
+
+	      subl %ecx, %edi
+	      jne EndifN                        # Ends if values are different
+
+	      irmovl $4, %ecx
+	      addl %ecx, %eax                   # Setting adresses for the next elements to compare
+	      subl %ecx, %ebx		
+
+	      subl %esi, %edx
+	      je EndifY                         # Ends if values are values are the same
+
+	      jmp SecondLoop
+
+EndifN:	      rrmovl %esp, %ebp
+      	      irmovl 78, %eax                   # Print N
+      	      wrch %eax
+      	      jmp End
+
+EndifY:	      rrmovl %esp, %ebp
+      	      irmovl 89, %eax                   # Print Y
+      	      wrch %eax
+
+End:	      irmovl 10, %eax
+      	      wrch %eax                         # Print nextline charater
+      	      halt
+	
+             .align 4
+	     
+Array:       .long 0
